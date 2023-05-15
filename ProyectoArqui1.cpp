@@ -5,8 +5,8 @@ int select2Pin = 3;
 int statePin = 4;
 int clockFFPin = 5;
 int MY_BUTTON = 11;
-int read1Pin = 13;
-int read2Pin = 12;
+int read1Pin = 12;
+int read2Pin = 13;
 int output1, output2;
 
 /*
@@ -21,15 +21,29 @@ class ParkingSpot {
    int code;
    int priority;
    public:
-   ParkingSpot(int State, int Code){
+   ParkingSpot(int State, int Code, int Priority){
     state = State;
     code = Code;
+    priority = Priority;
    }
 
    void setState(int State){
-    state = State;
+     if(state == 1 && State == 2){
+        state = State;
+     }
+     else if (state == 2 && State == 1){
+        
+     }
+     else
+     {
+       state = State;
+     }
+    
    }
-   
+
+    int getState(){
+        return state;
+    }
     setPriority(int Priority){
         priority = Priority;
     }
@@ -38,20 +52,48 @@ class ParkingSpot {
         return priority;
     }
 
+
+
    void showState(){
     
-     digitalWrite(clockFFPin, 0);
-
-    if(state == 1)
+    if(state == 0)
     {
-      digitalWrite(statePin, 1);
-    }
-    else
-    {
+      //status bit1
+      digitalWrite(clockFFPin, 0);
       digitalWrite(statePin, 0);
+      digitalWrite(clockFFPin, 1);
+      //status bit2
+      digitalWrite(clockFFPin, 0);
+      digitalWrite(statePin, 0);
+      digitalWrite(clockFFPin, 1);
+    }
+    else if(state == 1)
+    {
+      //status bit1
+      digitalWrite(clockFFPin, 0);
+      digitalWrite(statePin, 0);
+      digitalWrite(clockFFPin, 1);
+
+      //status bit2
+      digitalWrite(clockFFPin, 0);
+      digitalWrite(statePin, 1);
+      digitalWrite(clockFFPin, 1);
+    }
+    else if (state == 2)
+    {
+      //status bit1
+      digitalWrite(clockFFPin, 0);
+      digitalWrite(statePin, 1);
+      digitalWrite(clockFFPin, 1);
+
+      //status bit2
+      digitalWrite(clockFFPin, 0);
+      digitalWrite(statePin, 0);
+      digitalWrite(clockFFPin, 1);
+
     }
 
-    digitalWrite(clockFFPin, 1);
+    
    }
 
    void showCode(){
@@ -94,16 +136,16 @@ class ParkingSpot {
 };
 ParkingSpot parkingSpots[2][4] = {
      {
-        ParkingSpot(0,1),
-        ParkingSpot(0,2),
-        ParkingSpot(0,3),
-        ParkingSpot(0,4)
+        ParkingSpot(1,1,8),
+        ParkingSpot(1,2,9),
+        ParkingSpot(1,3,7),
+        ParkingSpot(1,4,6)
      },
      {
-        ParkingSpot(0,5),
-        ParkingSpot(0,6),
-        ParkingSpot(0,7),
-        ParkingSpot(0,8)
+        ParkingSpot(1,5,5),
+        ParkingSpot(1,6,4),
+        ParkingSpot(1,7,3),
+        ParkingSpot(1,8,12)
      }
 
 };
@@ -119,6 +161,7 @@ void setup() {
 }
 
 void loop() {
+
     int counter = 0;
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
@@ -128,22 +171,51 @@ void loop() {
             output1 = digitalRead(read1Pin);
             output2 = digitalRead(read2Pin);
             
-            //parkingSpots[0][counter].showCode();
             parkingSpots[0][counter].setState(output1);
-            parkingSpots[0][counter].showState();
 
-            //parkingSpots[1][counter].showCode();
             parkingSpots[1][counter].setState(output2);
-            parkingSpots[1][counter].showState();
             counter++;
         }
   }
-/*
+
+for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 4; j++) {
+        parkingSpots[i][j].showState();
+    }
+}
+
+
   if (digitalRead(MY_BUTTON) == 1) {
-    digitalWrite(statePin, 0);
-    parkingSpots[0][0].showState();
+
+            ParkingSpot* maxPrioritySpot = nullptr;
+
+        for (int i = 0; i < 2; i++) {
+          for (int j = 0; j < 4; j++) {
+            ParkingSpot* currentSpot = &parkingSpots[i][j];
+            
+            if(maxPrioritySpot != nullptr){
+                if (currentSpot->getPriority() > maxPrioritySpot->getPriority() && currentSpot->getState() == 1) {
+                  maxPrioritySpot = currentSpot;
+                }
+            }
+            else if (currentSpot->getState() == 1)
+            {
+              maxPrioritySpot = currentSpot;
+              
+            }
+            
+          }
+        }
+        if(maxPrioritySpot != nullptr){
+        maxPrioritySpot->showCode();
+        maxPrioritySpot->setState(2);
+        }
+        else
+        {
+        shiftOut(dataPin, clockPin, MSBFIRST, B11110011); // Enviamos la letra E
+        }
   }
-  */
+
 }
 
 
