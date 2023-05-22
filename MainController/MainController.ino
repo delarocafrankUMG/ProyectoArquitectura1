@@ -6,19 +6,24 @@ int statePin = 4;
 int clockFFPin = 5;
 int TalanqueraIN = 6;
 int CarPassIN = 7;
+int TalanqueraOUT = 8;
+int CarPassOUT = 9;
+int BUTTON_OUT = 10;
 int MY_BUTTON = 11;
 int read1Pin = 12;
 int read2Pin = 13;
 int output1, output2;
-int testPin = 15;
-
+int clockPinSalida = 15;
+int dataPinSalida = 16;
+int EspaciosDisponibles = 0;
+int StartUpFlag = 0;
 /*
 Status Talanquera
 0: Cerrada
 1: Abierta
 */
 int statusTalanqueraIN = 0;
-
+int statusTalanqueraOUT = 0;
 
 /*
 State 
@@ -168,8 +173,10 @@ void setup() {
   pinMode(select1Pin, OUTPUT);
   pinMode(select2Pin, OUTPUT);
   pinMode(statePin, OUTPUT);
-  pinMode(testPin, OUTPUT);
+  pinMode(clockPinSalida, OUTPUT);
+  pinMode(dataPinSalida, OUTPUT);
   pinMode(TalanqueraIN, OUTPUT);
+  pinMode(TalanqueraOUT, OUTPUT);
   //Serial.begin(9600); // Velocidad de transmisión serial
 }
 
@@ -177,6 +184,48 @@ void AbrirTalanquera(int TalanqueraID) {
   digitalWrite(TalanqueraID, 1);
   delay(100);
   digitalWrite(TalanqueraID, 0);
+}
+
+void DisplayEspacios(int Numero){
+  switch (Numero) {
+  case 0:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B01111111); 
+  break;
+  case 1:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B00001100);
+  break;
+  case 2:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B10110110);
+  break;
+  case 3:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B10011110);
+  break;
+  case 4:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B11001100); 
+  break;
+  case 5:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B11011010);
+  break;
+  case 6:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B11111000);
+  break;
+  case 7:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B00001110); 
+  break;
+  case 8:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B11111110);
+  break;
+  case 9:
+  shiftOut(dataPinSalida, clockPinSalida, MSBFIRST, B11001110);
+  break;
+  default:
+    // hacer algo si el valor no coincide con ningún caso
+    break;
+}
+}
+void VehiculoCount(int numero){
+  EspaciosDisponibles = EspaciosDisponibles + numero;
+  DisplayEspacios(EspaciosDisponibles);
 }
 
 void loop() {
@@ -192,10 +241,15 @@ void loop() {
             parkingSpots[0][counter].setState(output1);
 
             parkingSpots[1][counter].setState(output2);
+
+            if(StartUpFlag == 0){
+                VehiculoCount(output1);
+                VehiculoCount(output2);
+            }
             counter++;
         }
   }
-
+StartUpFlag = 1;
 for (int i = 0; i < 2; i++) {
     for (int j = 0; j < 4; j++) {
         parkingSpots[i][j].showState();
@@ -204,8 +258,7 @@ for (int i = 0; i < 2; i++) {
 
 
   if (digitalRead(MY_BUTTON) == 1 && statusTalanqueraIN == 0) {
-
-            ParkingSpot* maxPrioritySpot = nullptr;
+        ParkingSpot* maxPrioritySpot = nullptr;
 
         for (int i = 0; i < 2; i++) {
           for (int j = 0; j < 4; j++) {
@@ -228,6 +281,7 @@ for (int i = 0; i < 2; i++) {
         maxPrioritySpot->showCode();
         maxPrioritySpot->setState(2);
         AbrirTalanquera(TalanqueraIN);
+        VehiculoCount(-1);
         statusTalanqueraIN = 1;
         }
         else
@@ -241,6 +295,16 @@ for (int i = 0; i < 2; i++) {
     shiftOut(dataPin, clockPin, MSBFIRST, B00000000); // Apagamos el display
   }
 
+  if(digitalRead(BUTTON_OUT) == 1 && statusTalanqueraOUT == 0){
+      AbrirTalanquera(TalanqueraOUT);
+      statusTalanqueraOUT = 1;
+  }
+
+    if(digitalRead(CarPassOUT) == 1 && statusTalanqueraOUT == 1){
+    statusTalanqueraOUT = 0;
+    VehiculoCount(1);
+  }
+  
 }
 
 

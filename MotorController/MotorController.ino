@@ -5,8 +5,11 @@ const int speed = 5;
 const int pasos = 1;
 int TalanqueraIN = 12;
 int CarPassIN = 13;
+int TalanqueraOUT = 4;
+int CarPassOUT = 5;
 int a = 0; // startup variable
 int statusTalanqueraIN = 0;
+int statusTalanqueraOUT = 0;
 /*
 Status Talanquera
 0: Cerrada
@@ -25,7 +28,6 @@ void loop() {
 if(a == 0){
   motorIN.step(3);
   motorOUT.step(3);
-  delay(500);
   motorIN.step(-3);
   motorOUT.step(-3);
   a= 1;
@@ -38,6 +40,16 @@ statusTalanqueraIN = 1;
 if(digitalRead(CarPassIN) == 1 && statusTalanqueraIN == 1){
 motorIN.step(-3);
 statusTalanqueraIN = 0;
+}
+
+if(digitalRead(TalanqueraOUT) == 1 && statusTalanqueraOUT == 0){
+motorOUT.step(3);
+statusTalanqueraOUT = 1;
+}
+
+if(digitalRead(CarPassOUT) == 1 && statusTalanqueraOUT == 1){
+motorOUT.step(-3);
+statusTalanqueraOUT = 0;
 }
 
 }
